@@ -1,0 +1,228 @@
+openapi: 3.0.3
+
+info:
+  title: Crypto invest recommendation service
+  description: API description.
+  version: 1.0.0
+
+servers:
+  - url: 'http://localhost:8080/api/v1'
+
+paths:
+  /cryptos/statistics:
+    get:
+      tags: [ Crypto Information ]
+      operationId: getStatisticForAllCryptos
+      description: 'Calculates oldest/newest/min/max for each crypto'
+      parameters:
+        - $ref: '#/components/parameters/startDateParam'
+        - $ref: '#/components/parameters/endDateParam'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllCryptosStatisticResponseDto'
+        '404':
+          description: Data not found error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+  /cryptos/{cryptoName}/statistic:
+    get:
+      tags: [ Crypto Information ]
+      operationId: getStatisticForSpecificCrypto
+      description: 'Return the oldest/newest/min/max values for a requested crypto'
+      parameters:
+        - $ref: '#/components/parameters/cryptoNameParam'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CryptoStatisticResponseDto'
+        '400':
+          description: Bad request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+        '404':
+          description: Data not found error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+  /cryptos/normalized-range:
+    get:
+      tags: [ Crypto Information ]
+      operationId: getNormalizedRangeSortedCryptos
+      description: 'Return a descending sorted list of all the cryptos, comparing the normalized range (i.e. (max-min)/min)'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NormalizedRangeSortedCryptosResponseDto'
+  /cryptos/{date}/highest-normalized-range:
+    get:
+      tags: [ Crypto Information ]
+      operationId: getHighestNormalizedForSpecificDayCrypto
+      description: 'Return the crypto with the highest normalized range for a specific day'
+      parameters:
+        - $ref: '#/components/parameters/dateParam'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighestNormalizedForSpecificDayCryptoResponseDto'
+        '404':
+          description: Data not found error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+  /cryptos/names:
+    get:
+      tags: [ Crypto Information ]
+      operationId: getSupportedCryptoNames
+      description: 'Return supported crypto names'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CryptoNamesResponseDto'
+
+  /cryptos:
+    post:
+      tags: [ Crypto Management ]
+      operationId: addNewCrypto
+      description: |
+        Adds new crypto.
+        
+        File name example: `{CRYPTO_NAME_UPPER_CASE}_values.csv`.
+        
+        File structure:
+        | timestamp    | symbol | price    |
+        |--------------|--------|----------|
+        | 1641009600000| BTC    | 46813.21 |
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: File uploaded successfully
+
+components:
+  responses:
+    500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+
+  schemas:
+    AllCryptosStatisticResponseDto:
+      type: object
+      properties:
+        cryptoStatistic:
+          type: array
+          items:
+            $ref: '#/components/schemas/CryptoStatisticResponseDto'
+    CryptoStatisticResponseDto:
+      type: object
+      properties:
+        cryptoName:
+          type: string
+        oldestPrice:
+          type: number
+          format: double
+        newestPrice:
+          type: number
+          format: double
+        minPrice:
+          type: number
+          format: double
+        maxPrice:
+          type: number
+          format: double
+    NormalizedRangeSortedCryptosResponseDto:
+      type: object
+      properties:
+        cryptos:
+          type: array
+          items:
+            type: string
+    HighestNormalizedForSpecificDayCryptoResponseDto:
+      type: object
+      properties:
+        cryptoName:
+          type: string
+    CryptoNamesResponseDto:
+      type: object
+      properties:
+        cryptos:
+          type: array
+          items:
+            type: string
+    ErrorResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+
+
+  parameters:
+    cryptoNameParam:
+      name: cryptoName
+      in: path
+      required: true
+      description: Cryptocurrency name
+      schema:
+        type: string
+        example: BTC
+    dateParam:
+      name: date
+      in: path
+      description: The date should be in 'yyyy-MM-dd' format
+      required: true
+      schema:
+        type: string
+        format: date
+    startDateParam:
+      name: startDate
+      in: query
+      description: The date should be in 'yyyy-MM-dd' format
+      required: true
+      schema:
+        type: string
+        format: date
+    endDateParam:
+      name: endDate
+      in: query
+      description: The date should be in 'yyyy-MM-dd' format
+      required: true
+      schema:
+        type: string
+        format: date
+
+
+

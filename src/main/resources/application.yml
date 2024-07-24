@@ -1,0 +1,41 @@
+application:
+  name: crypto-invest
+
+server:
+  port: 8080
+
+spring-doc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    urls[0]:
+      name: Crypto Invest API
+      url: /api.yaml
+
+spring:
+  servlet.multipart:
+    max-file-size: 1GB
+    max-request-size: 1GB
+  cache:
+    caffeine:
+      spec: maximumSize=10000,expireAfterAccess=600s
+    cache-names:
+      - buckets
+
+# https://github.com/MarcGiffing/bucket4j-spring-boot-starter/ here you can find documentation for this solution
+bucket4j:
+  enabled: true
+  filters:
+    - cache-name: buckets
+      filter-method: servlet
+      url: /api/v1/.*
+      rate-limits:
+        - bandwidths:
+            - capacity: 2
+              time: 10
+              unit: seconds
+          cache-key: "getRemoteAddr()"
+
+logging:
+  level:
+    root: ${log.level:INFO}
